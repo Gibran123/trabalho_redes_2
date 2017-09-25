@@ -97,11 +97,13 @@ public class ServidorService {
                         case SEND_ALL:
                             sendAll(chat, Action.SEND_ONE);
                             break;
-                        case USERS_ONLINE:
+                        case SEND_PRIVATE:
+                            sendPrivate(chat, Action.SEND_ONE);
                             break;
                         case USER_HAS_LEFT:
                             desconect(chat, output);
                             sendAll(chat, Action.USER_HAS_LEFT);
+                            sendOnlineUsers(chat);
                             break;
                         default:
                     }
@@ -113,7 +115,6 @@ public class ServidorService {
             }
 
         }
-
     }
 
     private synchronized boolean connect(ChatMessage message, ObjectOutputStream output) {
@@ -148,6 +149,19 @@ public class ServidorService {
     private synchronized void sendAll(ChatMessage chat, Action action) {
         for (Map.Entry<String, ObjectOutputStream> kv : mapOnlines.entrySet()) {
             if (!kv.getKey().equals(chat.getName())) {
+                chat.setAction(action);
+                try {
+                    kv.getValue().writeObject(chat);
+                } catch (IOException ex) {
+                    Logger.getLogger(ServidorService.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+    }
+    
+    private void sendPrivate(ChatMessage chat, Action action) {
+        for (Map.Entry<String, ObjectOutputStream> kv : mapOnlines.entrySet()) {
+            if (kv.getKey().equals(chat.getNameReserved())) {
                 chat.setAction(action);
                 try {
                     kv.getValue().writeObject(chat);

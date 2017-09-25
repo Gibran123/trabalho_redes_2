@@ -28,6 +28,7 @@ public class ClientFrame extends javax.swing.JFrame {
     private ChatMessage chat;
     private ClientService clientService;
     private static final String FAILED_CONNECTION_MESSAGE = "Falha ao conectar!!!";
+    private boolean privateChatIsOn = false;
 
     /**
      * Creates new form ClientFrame
@@ -79,7 +80,7 @@ public class ClientFrame extends javax.swing.JFrame {
 
                 }
             } catch (IOException ex) {
-                Logger.getLogger(ClientFrame.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("Thread stopped");
             } catch (ClassNotFoundException ex) {
                 Logger.getLogger(ClientFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -134,12 +135,14 @@ public class ClientFrame extends javax.swing.JFrame {
 
     private void atualizatUsuariosOnline(Set<String> names) {
 
+         this.listOnlines.setListData(new String[1]);
+        
         if (names.size() < 2)  return;
         
         names.removeIf((name) -> name.equals(chat.getName()));
         
         String[] vetorNames = names.toArray(new String[names.size()]);
-
+       
         this.listOnlines.setListData(vetorNames);
         this.listOnlines.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         this.listOnlines.setLayoutOrientation(JList.VERTICAL);
@@ -164,6 +167,7 @@ public class ClientFrame extends javax.swing.JFrame {
         txtAreaSend = new javax.swing.JTextArea();
         btnLimpar = new javax.swing.JButton();
         btnEnviar = new javax.swing.JButton();
+        ToggleButtonPrivate = new javax.swing.JToggleButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -223,6 +227,11 @@ public class ClientFrame extends javax.swing.JFrame {
             public int getSize() { return strings.length; }
             public String getElementAt(int i) { return strings[i]; }
         });
+        listOnlines.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                listOnlinesValueChanged(evt);
+            }
+        });
         jScrollPane3.setViewportView(listOnlines);
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -270,6 +279,14 @@ public class ClientFrame extends javax.swing.JFrame {
             }
         });
 
+        ToggleButtonPrivate.setText("Privado");
+        ToggleButtonPrivate.setToolTipText("Ligar/Desligar conversa privada");
+        ToggleButtonPrivate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ToggleButtonPrivateActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -280,7 +297,8 @@ public class ClientFrame extends javax.swing.JFrame {
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 393, Short.MAX_VALUE)
                     .addComponent(jScrollPane2)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(ToggleButtonPrivate)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(btnLimpar)
                         .addGap(3, 3, 3)
                         .addComponent(btnEnviar)))
@@ -296,7 +314,8 @@ public class ClientFrame extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnLimpar)
-                    .addComponent(btnEnviar))
+                    .addComponent(btnEnviar)
+                    .addComponent(ToggleButtonPrivate))
                 .addContainerGap(10, Short.MAX_VALUE))
         );
 
@@ -364,11 +383,13 @@ public class ClientFrame extends javax.swing.JFrame {
         if(message.trim().isEmpty()) return;
         
         String name  = this.chat.getName();
+        String nameReserved = this.chat.getNameReserved();
         
         this.chat = new ChatMessage();
         this.chat.setName(name);
         this.chat.setMessage(message);
-        this.chat.setAction(Action.SEND_ALL);
+        this.chat.setNameReserved(nameReserved);
+        this.chat.setAction(privateChatIsOn ? Action.SEND_PRIVATE : Action.SEND_ALL);
         
         this.txtAreaReceive.append("Você disse: " + message + "\n");
         
@@ -399,7 +420,7 @@ public class ClientFrame extends javax.swing.JFrame {
                 this.socket.getOutputStream().close();
             }
         } catch (IOException ex) {
-            Logger.getLogger(ClientFrame.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("Socket closed");
         }
     }
     
@@ -407,7 +428,27 @@ public class ClientFrame extends javax.swing.JFrame {
         closeSocketConnection();
     }//GEN-LAST:event_formWindowClosing
 
+    private void listOnlinesValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_listOnlinesValueChanged
+        evt.getFirstIndex();
+    }//GEN-LAST:event_listOnlinesValueChanged
+
+    private void ToggleButtonPrivateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ToggleButtonPrivateActionPerformed
+        String selectedValue = this.listOnlines.getSelectedValue();
+        if (privateChatIsOn) {
+            privateChatIsOn = false;
+            chat.setNameReserved(null);
+        }else {
+            if (selectedValue == null) {
+                JOptionPane.showMessageDialog(null, "Você precisa selecionar alguém para iniciar uma conversa privada");
+                return;
+            }
+            chat.setNameReserved(selectedValue);
+            privateChatIsOn = true;
+        }
+    }//GEN-LAST:event_ToggleButtonPrivateActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JToggleButton ToggleButtonPrivate;
     private javax.swing.JButton btnConnectar;
     private javax.swing.JButton btnEnviar;
     private javax.swing.JButton btnLimpar;

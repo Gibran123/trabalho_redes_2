@@ -62,7 +62,7 @@ public class ChatMessage implements Serializable{
     }
     
     public enum Action {
-        CONNECT, DISCONNECT, SEND_ONE, SEND_ALL, USERS_ONLINE, USER_HAS_LEFT
+        CONNECT, DISCONNECT, SEND_ONE, SEND_ALL, USERS_ONLINE, USER_HAS_LEFT, SEND_PRIVATE
     }
     
     
