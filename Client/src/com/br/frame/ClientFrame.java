@@ -8,6 +8,9 @@ package com.br.frame;
 import com.br.bean.ChatMessage;
 import com.br.bean.ChatMessage.Action;
 import com.br.service.ClientService;
+import com.br.service.RSAUtil;
+import com.br.service.TripleDESUtil;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
@@ -74,8 +77,8 @@ public class ClientFrame extends javax.swing.JFrame {
                         case USERS_ONLINE:
                             atualizatUsuariosOnline(chat.getSetOnlines());
                             break;
-                        default:
-                            break;
+                        case PUBLIC_SERVER_KEY:
+                            persistPublicKeyServer(chat);
                     }
 
                 }
@@ -87,6 +90,25 @@ public class ClientFrame extends javax.swing.JFrame {
 
         }
 
+    }
+
+    private void persistPublicKeyServer(ChatMessage chat) {
+        RSAUtil.setPublicKeyServer(chat.getPublicServerKey());
+        System.out.println("Recebendo a chave pública do servidor-------------------->" + RSAUtil.getPublicKeyServer());
+        sendPublicRSAKeyToServer();
+    }
+
+    private void sendPublicRSAKeyToServer() {
+        String nameText = this.fieldName.getText();
+        ChatMessage chatMessage = new ChatMessage();
+        chatMessage.setAction(Action.PUBLIC_CLIENT_KEY);
+        //chave 3des encripitada
+        byte[] encryptedKey = RSAUtil.encryptData(this.clientService.getTripleDESKey());
+        chatMessage.setEncryptedTripleDESkey(encryptedKey);
+        chatMessage.setName(nameText);
+        chatMessage.setPublicClientKey(this.clientService.getPublicRSAKey());
+        this.clientService.send(chatMessage);
+        System.out.println("Enviando a chave pública pro servidor-------------------->" + this.clientService.getPublicRSAKey());
     }
 
     private void changeComponentsState(boolean enable) {

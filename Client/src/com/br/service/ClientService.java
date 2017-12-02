@@ -9,6 +9,9 @@ import com.br.bean.ChatMessage;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.security.*;
+import java.util.Arrays;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,6 +24,14 @@ public class ClientService {
     private Socket socket;
     private ObjectOutputStream output;
     private static final short PORT = 8080;
+    private PublicKey publicRSAKey;
+    private PrivateKey privateRSAKey;
+    private String tripleDESKey;
+
+    public ClientService() {
+        this.tripleDESKey = Arrays.toString(getNextNumber());
+        setKeys();
+    }
     
     public Socket connect() {
         try {
@@ -42,5 +53,36 @@ public class ClientService {
         }
         
     }
-    
+
+    public PublicKey getPublicRSAKey() {
+        return publicRSAKey;
+    }
+
+    public PrivateKey getPrivateRSAKey() {
+        return privateRSAKey;
+    }
+
+    public String getTripleDESKey() {
+        return tripleDESKey;
+    }
+
+    public void setKeys() {
+
+        try {
+            KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+            generator.initialize(2048);
+            KeyPair keyPair = generator.generateKeyPair();
+            this.publicRSAKey = keyPair.getPublic();
+            this.privateRSAKey = keyPair.getPrivate();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static byte[] getNextNumber(){
+        byte[] r = new byte[8]; //Means 64 bit
+        Random random = new Random();
+        random.nextBytes(r);
+        return r;
+    }
 }

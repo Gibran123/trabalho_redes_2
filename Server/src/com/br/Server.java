@@ -5,6 +5,7 @@
  */
 package com.br;
 
+import com.br.service.RSAUtil;
 import com.br.service.ServidorService;
 
 /**
@@ -17,8 +18,9 @@ public class Server {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        RSAUtil.generateKeys();
         System.out.println("Servidor on!");
-        ServidorService servidorService = new ServidorService();
+        new ServidorService();
     }
     
 }

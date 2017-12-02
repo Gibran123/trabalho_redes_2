@@ -6,6 +6,8 @@
 package com.br.bean;
 
 import java.io.Serializable;
+import java.security.Key;
+import java.security.PublicKey;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -20,6 +22,9 @@ public class ChatMessage implements Serializable{
     private String nameReserved;
     private Set<String> setOnlines = new HashSet<>();
     private Action action;
+    private PublicKey publicServerKey;
+    private PublicKey publicClientKey;
+    private byte[] encryptedTripleDESkey;
 
     public String getName() {
         return name;
@@ -60,9 +65,42 @@ public class ChatMessage implements Serializable{
     public void setAction(Action action) {
         this.action = action;
     }
-    
+
+    public PublicKey getPublicServerKey() {
+        return publicServerKey;
+    }
+
+    public void setPublicServerKey(PublicKey publicServerKey) {
+        this.publicServerKey = publicServerKey;
+    }
+
+    public PublicKey getPublicClientKey() {
+        return publicClientKey;
+    }
+
+    public void setPublicClientKey(PublicKey publicClientKey) {
+        this.publicClientKey = publicClientKey;
+    }
+
+    public byte[] getEncryptedTripleDESkey() {
+        return encryptedTripleDESkey;
+    }
+
+    public void setEncryptedTripleDESkey(byte[] encryptedTripleDESkey) {
+        this.encryptedTripleDESkey = encryptedTripleDESkey;
+    }
+
     public enum Action {
-        CONNECT, DISCONNECT, SEND_ONE, SEND_ALL, USERS_ONLINE, USER_HAS_LEFT, SEND_PRIVATE
+        CONNECT,
+        DISCONNECT,
+        SEND_ONE,
+        SEND_ALL,
+        USERS_ONLINE,
+        USER_HAS_LEFT,
+        SEND_PRIVATE,
+        PUBLIC_SERVER_KEY,
+        PUBLIC_CLIENT_KEY,
+        TRIPLE_DSE_KEY
     }
     
     

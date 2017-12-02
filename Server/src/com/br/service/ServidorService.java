@@ -11,11 +11,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Map;
+import java.util.*;
 import java.io.ObjectOutputStream;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -85,7 +82,8 @@ public class ServidorService {
                             boolean isConnected = connect(chat, output);
                             if (isConnected) {
                                 mapOnlines.put(chat.getName(), output);
-                                sendOnlineUsers(chat); 
+                                sendOnlineUsers(chat);
+                                sendPublicRSAServerKey(chat, output);
                             }
                             break;
                         case DISCONNECT:
@@ -105,6 +103,8 @@ public class ServidorService {
                             sendAll(chat, Action.USER_HAS_LEFT);
                             sendOnlineUsers(chat);
                             break;
+                        case PUBLIC_CLIENT_KEY:
+                            persistPublicClientKey(chat);
                         default:
                     }
 
@@ -115,6 +115,28 @@ public class ServidorService {
             }
 
         }
+    }
+
+    private void persistPublicClientKey(ChatMessage chatMessage) {
+        RSAUtil.clientsRSAPublicKeys.put(chatMessage.getName(), chatMessage.getPublicClientKey());
+        System.out.println("Recebendo a chave pública do cliente-------------------->" + RSAUtil.getPublicKey());
+        persistTripleDESKey(chatMessage);
+    }
+
+    private void persistTripleDESKey(ChatMessage chatMessage) {
+        //Desencriptando a chave 3des do cliente
+        String desKey = RSAUtil.decryptData(chatMessage.getEncryptedTripleDESkey());
+        DESUtil.clientsPublicKeys.put(chatMessage.getName(), desKey);
+        System.out.println("Recebendo a chave DES do cliente-------------------->" + Arrays.toString(chatMessage.getEncryptedTripleDESkey()));
+    }
+
+    private void sendPublicRSAServerKey(ChatMessage chat, ObjectOutputStream output) {
+        ChatMessage newChat = new ChatMessage();
+        newChat.setName(chat.getName());
+        newChat.setAction(Action.PUBLIC_SERVER_KEY);
+        newChat.setPublicServerKey(RSAUtil.getPublicKey());
+        System.out.println("Enviando a chave pública-------------------->" + RSAUtil.getPublicKey());
+        sendOne(newChat, output);
     }
 
     private synchronized boolean connect(ChatMessage message, ObjectOutputStream output) {
@@ -141,6 +163,7 @@ public class ServidorService {
 
     private synchronized void desconect(ChatMessage message, ObjectOutputStream outputStream) {
         this.mapOnlines.remove(message.getName());
+        RSAUtil.clientsRSAPublicKeys.remove(message.getName());
         System.err.println("DISCONNECT------------------------> " + !this.mapOnlines.containsKey(message.getName()));
         System.out.println(message.getName() + " saiu da sala.");
         
