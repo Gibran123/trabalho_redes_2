@@ -25,6 +25,7 @@ public class ChatMessage implements Serializable{
     private PublicKey publicServerKey;
     private PublicKey publicClientKey;
     private byte[] encryptedTripleDESkey;
+    private byte[] encryptedMessage;
 
     public String getName() {
         return name;
@@ -88,6 +89,14 @@ public class ChatMessage implements Serializable{
 
     public void setEncryptedTripleDESkey(byte[] encryptedTripleDESkey) {
         this.encryptedTripleDESkey = encryptedTripleDESkey;
+    }
+
+    public byte[] getEncryptedMessage() {
+        return encryptedMessage;
+    }
+
+    public void setEncryptedMessage(byte[] encryptedMessage) {
+        this.encryptedMessage = encryptedMessage;
     }
 
     public enum Action {

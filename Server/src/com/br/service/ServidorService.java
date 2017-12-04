@@ -30,22 +30,15 @@ public class ServidorService {
     private static final String FAILED_CONNECTION_MESSAGE = "Falha ao conectar!!!";
 
     public ServidorService() {
-
         try {
-
             serverSocket = new ServerSocket(PORT);
-
             while (true) {
-
                 socket = serverSocket.accept();
                 new Thread(new SocketListener(socket)).start();
-
             }
-
         } catch (IOException e) {
             Logger.getLogger(ServidorService.class.getName()).log(Level.SEVERE, null, e);
         }
-
     }
 
     private class SocketListener implements Runnable {
@@ -70,7 +63,6 @@ public class ServidorService {
             ChatMessage chat = null;
 
             try {
-
                 while ((chat = (ChatMessage) input.readObject()) != null) {
 
                     Action action = chat.getAction();
@@ -170,10 +162,12 @@ public class ServidorService {
     }
 
     private synchronized void sendAll(ChatMessage chat, Action action) {
+        String message = getMessage(chat);
         for (Map.Entry<String, ObjectOutputStream> kv : mapOnlines.entrySet()) {
             if (!kv.getKey().equals(chat.getName())) {
                 chat.setAction(action);
                 try {
+                    if (message != null) chat.setEncryptedMessage(getEncryptedMessage(message, kv.getKey()));
                     kv.getValue().writeObject(chat);
                 } catch (IOException ex) {
                     Logger.getLogger(ServidorService.class.getName()).log(Level.SEVERE, null, ex);
@@ -183,16 +177,34 @@ public class ServidorService {
     }
     
     private void sendPrivate(ChatMessage chat, Action action) {
+        String message = getMessage(chat);
         for (Map.Entry<String, ObjectOutputStream> kv : mapOnlines.entrySet()) {
             if (kv.getKey().equals(chat.getNameReserved())) {
                 chat.setAction(action);
                 try {
+                    if (message != null) {
+                        chat.setEncryptedMessage(getEncryptedMessage(message, kv.getKey()));
+                    }
                     kv.getValue().writeObject(chat);
                 } catch (IOException ex) {
                     Logger.getLogger(ServidorService.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
+    }
+
+    private String getMessage(ChatMessage chat) {
+        String message = null;
+        if (chat.getEncryptedMessage() != null && chat.getEncryptedMessage().length != 0) {
+            String key = DESUtil.clientsPublicKeys.get(chat.getName());
+            message = new String(DESUtil.dencrypt(chat.getEncryptedMessage(), key));
+        }
+        return message;
+    }
+
+    private byte[] getEncryptedMessage(String message, String key) {
+        String tripleDSKey = DESUtil.clientsPublicKeys.get(key);
+        return DESUtil.encrypt(message, tripleDSKey);
     }
 
     private void sendOnlineUsers(ChatMessage chat) {

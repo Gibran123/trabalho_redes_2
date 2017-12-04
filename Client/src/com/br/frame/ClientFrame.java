@@ -146,13 +146,14 @@ public class ClientFrame extends javax.swing.JFrame {
     private void receive(ChatMessage chat) {
         
         if (chat.getAction().equals(Action.USER_HAS_LEFT)) {
-            
+
+
             this.txtAreaReceive.append(chat.getName().concat(" saiu da sala.").concat("\n"));
             
             return;
         }
-        
-        this.txtAreaReceive.append(chat.getName().concat(" enviou: ").concat(chat.getMessage().concat("\n")));
+        final byte[] dencryptMessage = TripleDESUtil.dencrypt(chat.getEncryptedMessage(), this.clientService.getTripleDESKey());
+        this.txtAreaReceive.append(chat.getName().concat(" enviou: ").concat(new String(dencryptMessage).concat("\n")));
     }
 
     private void atualizatUsuariosOnline(Set<String> names) {
@@ -409,7 +410,7 @@ public class ClientFrame extends javax.swing.JFrame {
         
         this.chat = new ChatMessage();
         this.chat.setName(name);
-        this.chat.setMessage(message);
+        this.chat.setEncryptedMessage(TripleDESUtil.encrypt(message, this.clientService.getTripleDESKey()));
         this.chat.setNameReserved(nameReserved);
         this.chat.setAction(privateChatIsOn ? Action.SEND_PRIVATE : Action.SEND_ALL);
         
